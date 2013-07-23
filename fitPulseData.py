@@ -23,11 +23,11 @@ def getMedian(dList):
     return numpy.median(dList)
 
 def poolResid1000(P, y, t):
-    k = qMS.growthRate(42)
+    k = qMS.growthRate(47)
     return y - qMS.poolFunc(k, t, P)
 
 def poolResid10(P, y, t):
-    k = qMS.growthRate(80)
+    k = qMS.growthRate(92)
     return y - qMS.poolFunc(k, t, P)
 
 def fitPoolSizes(Proteins, medDict10, medDict1000):
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     AllSubunits = LargeSubunit + SmallSubunit
     
-    path = '/home/jhdavis/scripts/python/figures/fitPulseData/msuPulseData/'
+    path = '/home/jhdavis/data/2013_05_28-MSUPulse/filtered/'
 
     reds = ['#ae2221', '#d72c2b', '#e78180']
     blues = ['#25557d', '#3170a4', '#5696cc']
