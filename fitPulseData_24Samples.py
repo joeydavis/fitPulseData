@@ -36,6 +36,48 @@ def fitPoolSizes(Proteins, medDict10, medDict1000):
         p_1000 = optimize.leastsq(poolResid1000, [p0_1000], args=(meas1000,ts1000))
         protPoolDict[prot] = {'10':p_10[0][0], '1000':p_1000[0][0]}
     return protPoolDict
+
+def plotLabelKinsPage(Proteins, medDict10, medDict1000, fig, name):
+    time = numpy.linspace(0, 140, 200)
+    k10 = qMS.growthRate(92)
+    k1000 = qMS.growthRate(47)
+    
+    Large1Ax = []
+    a = 0
+    for prot in Proteins:
+
+        ax = fig.add_subplot(5,2,a+1)
+        
+        ax.scatter([i[0] for i in medDict10[prot]], [i[1] for i in medDict10[prot]], c = 'r')
+        ax.scatter([i[0] for i in medDict1000[prot]], [i[1] for i in medDict1000[prot]], c = 'b')
+        ax.plot(time, qMS.maxLabFunc(k10, time), c='r')
+        ax.plot(time, qMS.maxLabFunc(k1000, time), c='b')
+        
+        ax.set_xlim([0,140])
+        ax.set_ylim([0,1.00])
+        ax.set_yticks([0,.25,.50,.75,1.00])
+        #if a < 7:
+        #    plt.setp(ax.get_xticklabels(), visible=False)
+        #if a%2==1:
+        #    plt.setp(ax.get_yticklabels(), visible=False)
+        ax.set_xticks([0,20,40,60,80,100,120,140])
+        ax.yaxis.tick_left()
+        ax.xaxis.tick_bottom()
+        
+        ax.text(0.5, 0.95, prot[4:], transform=ax.transAxes, fontsize=12, verticalalignment='top', horizontalalignment='center')
+        Large1Ax.append(ax)
+        a = a+1
+    fig.text(0.005, 0.1165, "fraction labeled", fontsize=12, rotation='vertical', verticalalignment='center')
+    fig.text(0.005, 0.317, "fraction labeled", fontsize=12, rotation='vertical', verticalalignment='center')
+    fig.text(0.005, 0.505, "fraction labeled", fontsize=12, rotation='vertical', verticalalignment='center')
+    fig.text(0.005, 0.7, "fraction labeled", fontsize=12, rotation='vertical', verticalalignment='center')
+    fig.text(0.005, 0.9, "fraction labeled", fontsize=12, rotation='vertical', verticalalignment='center')
+    fig.text(0.25, 0.0025, "time (mins)", fontsize=12, horizontalalignment='center')
+    fig.text(0.75, 0.0025, "time (mins)", fontsize=12, horizontalalignment='center')
+    fig.tight_layout()
+    pylab.savefig(name)
+    return Large1Ax
+
         
 def plotPoolPage(Proteins, protPoolDict, medDict10, medDict1000, fig, name):
     time = numpy.linspace(0, 140, 200)
@@ -86,7 +128,7 @@ def plotPoolPage(Proteins, protPoolDict, medDict10, medDict1000, fig, name):
     fig.text(0.25, 0.0025, "time (mins)", fontsize=12, horizontalalignment='center')
     fig.text(0.75, 0.0025, "time (mins)", fontsize=12, horizontalalignment='center')
     fig.tight_layout()
-    pylab.savefig(name)
+    #pylab.savefig(name)
     return Large1Ax
         
 def plotPoolBar(poolSizeDict, key, color, title, figname):
@@ -152,11 +194,11 @@ if __name__ == "__main__":
 
     AllSubunits = LargeSubunit + SmallSubunit
     
-    path = '/home/jhdavis/data/2013_05_28-MSUPulse/filtered/'
+    path = '/home/jhdavis/data/2013_05_28-MSUPulse2/filtered/'
 
     reds = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26', '#a50f15']
     blues = ['#eff3ff', '#c6dbef', '#93cae1', '#6baed6', '#3182bd', '#08519c']
-
+    '''
     f1 = 'muspulse1p2_iso_res_filt.csv'
     f2 = 'muspulse2_iso_res_filt.csv'
     f3 = 'muspulse3_iso_res_filt.csv'
@@ -170,7 +212,22 @@ if __name__ == "__main__":
     f10 = 'muspulse10_iso_res_filt.csv'
     f11 = 'muspulse11_iso_res_filt.csv'
     f12 = 'muspulse12_iso_res_filt.csv'
-
+    '''
+    f1 = 'muspulse13_iso_res_filt.csv'
+    f2 = 'muspulse14_iso_res_filt.csv'
+    f3 = 'muspulse15_iso_res_filt.csv'
+    f4 = 'muspulse16_iso_res_filt.csv'
+    f5 = 'muspulse17_iso_res_filt.csv'
+    f6 = 'muspulse18_iso_res_filt.csv'
+    
+    f7 = 'muspulse19_iso_res_filt.csv'
+    f8 = 'muspulse20_iso_res_filt.csv'
+    f9 = 'muspulse21_iso_res_filt.csv'
+    f10 = 'muspulse22_iso_res_filt.csv'
+    f11 = 'muspulse23_iso_res_filt.csv'
+    f12 = 'muspulse24_iso_res_filt.csv'    
+    
+    
     names10 = [path+n for n in [f1, f2, f3, f4, f5, f6]]
     names1000 = [path+n for n in [f7, f8, f9, f10, f11, f12]]
     
@@ -208,61 +265,63 @@ if __name__ == "__main__":
     '''
     yMax=1.25
     pylab.close('all')
-    ax = vizLib.makePlotWithFileList(names10, num, den, AllProteins=AllSubunits, yMax=yMax, names=labels10, colors=reds, figSize=(22,7),median=True)
+    ax = vizLib.makePlotWithFileList(names10, num, den, AllProteins=AllSubunits, yMax=yMax, names=labels10, colors=reds, figSize=(22,7),median=False)
     pylab.legend(loc='upper left', ncol=3)
     pylab.xticks(numpy.arange(1,len(AllSubunits)+1,1), [item[4:] for item in AllSubunits], rotation=45)
     ax.set_ylim([0,1])
-    ax.set_title('non-permissive conditions\nfraction labeled', multialignment='center')
+    ax.set_title('non-permissive conditions : 45S\nfraction labeled', multialignment='center')
     ax.set_ylabel('Labeled/[Labeled+Unlabeled]')
     pylab.tight_layout()
-    pylab.savefig('10uM_fracLab_med.pdf')
-    pylab.savefig('10uM_fracLab_med.png')
+    #pylab.savefig('10uM_fracLab_med.pdf')
+    #pylab.savefig('10uM_fracLab_med.png')
     
-    ax2 = vizLib.makePlotWithFileList(names1000, num, den, AllProteins=AllSubunits, yMax=yMax, names=labels1000, colors=blues, figSize=(22,7), median=True)
+    ax2 = vizLib.makePlotWithFileList(names1000, num, den, AllProteins=AllSubunits, yMax=yMax, names=labels1000, colors=blues, figSize=(22,7), median=False)
     pylab.xticks(numpy.arange(1,len(AllSubunits)+1,1), [item[4:] for item in AllSubunits], rotation=45)
-    ax2.set_title('permissive conditions\nfraction labeled', multialignment='center')
+    ax2.set_title('permissive conditions : 50S\nfraction labeled', multialignment='center')
     ax2.set_ylabel('Labeled/[Labeled+Unlabeled]')
     pylab.legend(loc='upper left', ncol=3)
     pylab.tight_layout()
-    pylab.savefig('1mM_fracLab_med.pdf')
-    pylab.savefig('1mM_fracLab_med.png')
+    #pylab.savefig('1mM_fracLab_med.pdf')
+    #pylab.savefig('1mM_fracLab_med.png')
     
     
     num = ['AMP_U', 'AMP_L']
     den = ['AMP_U', 'AMP_L', 'AMP_S']
     
-    ax = vizLib.makePlotWithFileList(names10, num, den, AllProteins=AllSubunits, normProtein='BSubL24', yMax=yMax, names=labels10, colors=reds, figSize=(22,7), median=True)
+    ax = vizLib.makePlotWithFileList(names10[:-1], num, den, AllProteins=AllSubunits, normProtein='BSubL24', yMax=yMax, names=labels10, colors=reds, figSize=(22,7), median=False)
     pylab.legend(loc='lower left', ncol=3, numpoints=1)
     pylab.xticks(numpy.arange(1,len(AllSubunits)+1,1), [item[4:] for item in AllSubunits], rotation=45)
-    ax.set_title('non-permissive conditions\ntotal protein', multialignment='center')
+    ax.set_title('non-permissive conditions : 45S\ntotal protein', multialignment='center')
     ax.set_ylabel('[Labeled+Unlabeled]/[Total]')
     pylab.tight_layout()
-    pylab.savefig('10uM_proteinLevels_med.pdf')
-    pylab.savefig('10uM_proteinLevels_med.png')
+    #pylab.savefig('10uM_proteinLevels_med.pdf')
+    #pylab.savefig('10uM_proteinLevels_med.png')
     
-    ax2 = vizLib.makePlotWithFileList(names1000, num, den, AllProteins=AllSubunits, normProtein='BSubL24', yMax=yMax, names=labels1000, colors=blues, figSize=(22,7), median=True)
-    ax2.set_title('permissive conditions\ntotal protein', multialignment='center')
+    ax2 = vizLib.makePlotWithFileList(names1000, num, den, AllProteins=AllSubunits, normProtein='BSubL24', yMax=yMax, names=labels1000, colors=blues, figSize=(22,7), median=False)
+    ax2.set_title('permissive conditions : 50S\ntotal protein', multialignment='center')
     ax2.set_ylabel('[Labeled+Unlabeled]/[Total]')
     pylab.xticks(numpy.arange(1,len(AllSubunits)+1,1), [item[4:] for item in AllSubunits], rotation=45)
     pylab.legend(loc='lower left', ncol=3, numpoints=1)
     pylab.tight_layout()
-    pylab.savefig('1mM_proteinLevels_med.pdf')
-    pylab.savefig('1mM_proteinLevels_med.png')
+    #pylab.savefig('1mM_proteinLevels_med.pdf')
+    #pylab.savefig('1mM_proteinLevels_med.png')
     '''
     
 ##################Find the medians###########################
     
     for prot in AllSubunits:
-        medDict10[prot] = [[ntDict10['times'][i],numpy.median(dataByProtein[ntDict10['names'][int(i)]][prot])] for i in [0,1,2,3,4,5] if len(dataByProtein[ntDict10['names'][int(i)]][prot]) > 0]
-        #medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2,3,4,5] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
-        medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
+        medDict10[prot] = [[ntDict10['times'][i],numpy.median(dataByProtein[ntDict10['names'][int(i)]][prot])] for i in [0,1,2,3,4] if len(dataByProtein[ntDict10['names'][int(i)]][prot]) > 0]
+        #medDict10[prot] = [[ntDict10['times'][i],numpy.median(dataByProtein[ntDict10['names'][int(i)]][prot])] for i in range(6,12) if len(dataByProtein[ntDict10['names'][int(i)]][prot]) > 0]
+        #medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in range(6,12) if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
+        medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2,3,4,5] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
+        #medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
     
 ##################Fit data using pool size equation###########################
-    
+    '''
     poolSizeDict = fitPoolSizes(AllSubunits, medDict10, medDict1000)
-    
+    '''
 ##################Plot the fits###########################
-    '''    
+    '''
     ext = '.png'
     fLarge1 = pylab.figure(figsize=(7,10))
     f1axs = plotPoolPage(LargeSubunit[0:10], poolSizeDict, medDict10, medDict1000, fLarge1, '50S-1'+ext)
@@ -279,6 +338,25 @@ if __name__ == "__main__":
     fSmall2 = pylab.figure(figsize=(7,10))
     f5axs =plotPoolPage(SmallSubunit[10:], poolSizeDict, medDict10, medDict1000, fSmall2, '30S-2'+ext)
     '''
+    ext = '.pdf'
+    fLarge1 = pylab.figure(figsize=(7,10))
+    f1axs = plotLabelKinsPage(LargeSubunit[0:10], medDict10, medDict1000, fLarge1, '50S-1'+ext)
+    
+    fLarge2 = pylab.figure(figsize=(7,10))
+    f1axs = plotLabelKinsPage(LargeSubunit[10:20], medDict10, medDict1000, fLarge2, '50S-2'+ext)    
+    
+    fLarge3 = pylab.figure(figsize=(7,10))
+    f3axs = plotLabelKinsPage(LargeSubunit[20:30], medDict10, medDict1000, fLarge3, '50S-3'+ext)
+    
+    fSmall1 = pylab.figure(figsize=(7,10))
+    f4axs = plotLabelKinsPage(SmallSubunit[0:10], medDict10, medDict1000, fSmall1, '30S-1'+ext)
+
+    fSmall2 = pylab.figure(figsize=(7,10))
+    f5axs =plotLabelKinsPage(SmallSubunit[10:], medDict10, medDict1000, fSmall2, '30S-2'+ext)
+    
+    
+    
+    
 ##################Make bar graphs###########################
     '''
     plotPoolBar(poolSizeDict, '10', 'r', '10 $\mu$M', '10uM.pdf')
@@ -287,7 +365,7 @@ if __name__ == "__main__":
     plotTwoPoolBars(poolSizeDict, SmallSubunit, '10', 'r', '10 $\mu$M', '1000', 'b', '1 mM', 'SmallSubunit.pdf')
     '''
 ##################Read protein inventory data###########################
-    
+    '''
     proteinToNormalizeTo = "BSubL24"
 
     LargeSubunit = ['BSubL01', 'BSubL02', 'BSubL03', 'BSubL04', 'BSubL05', 'BSubL06', 'BSubL10', 'BSubL11',
@@ -315,6 +393,7 @@ if __name__ == "__main__":
     pylab.legend(loc='lower left', prop={'size':12})
     pylab.tight_layout()
     '''
+    '''
     myPlot = qMS.makePlotWithDataSets(merged, LargeSubunit, ["McMaster45S_merged", 'McMaster50S_merged'])
     for i in LargeSubunit:
         pVal = stats.ttest_ind(merged[0][i]['vals'], merged[1][i]['vals'], equal_var=False)
@@ -327,7 +406,7 @@ if __name__ == "__main__":
     '''
     
 ##################Plot pool data vs. protein inventory data###########################
-    
+    '''
     verifiedZero = ['BSubL16', 'BSubL28', 'BSubL36']    
     for z in verifiedZero:    
         merged45[z] = numpy.array([0.0])
@@ -369,6 +448,7 @@ if __name__ == "__main__":
     #textstr2 = '\n\n'+'10 $\mu$M : P=' + p_10String
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
     scatAx.text(0.5, .4, textstr1, fontsize=15, verticalalignment='top', horizontalalignment='left', color='black', bbox=props)
-        
     pylab.tight_layout()
+    '''
+    
     pylab.show('all')
