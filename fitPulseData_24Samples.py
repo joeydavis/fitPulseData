@@ -20,6 +20,16 @@ def poolResid10(P, y, t):
     k = qMS.growthRate(92)
     return y - qMS.poolFunc(k, t, P)
 
+def turnoverResid1000(d, y, t):
+    k = qMS.growthRate(47)
+    #return y - qMS.overLabelingFunc(k, t, d)
+    return qMS.overLabelingFunc(k, t, d) - y
+
+def turnoverResid10(d, y, t):
+    k = qMS.growthRate(92)
+    #return y - qMS.overLabelingFunc(k, t, d)
+    return qMS.overLabelingFunc(k, t, d) - y
+
 def fitPoolSizes(Proteins, medDict10, medDict1000):
     p0_10 = 0.1
     p0_1000 = 0.1
@@ -37,7 +47,26 @@ def fitPoolSizes(Proteins, medDict10, medDict1000):
         protPoolDict[prot] = {'10':p_10[0][0], '1000':p_1000[0][0]}
     return protPoolDict
 
-def plotLabelKinsPage(Proteins, medDict10, medDict1000, fig, name):
+def fitTurnover(Proteins, medDict10, medDict1000):
+    d0_10 = 0
+    d0_1000 = 0
+    
+    protTODict = {}
+    for prot in Proteins:
+        print prot
+        ts10 = numpy.array([e[0] for e in medDict10[prot]])
+        meas10 = numpy.array([e[1] for e in medDict10[prot]])
+
+        ts1000 = numpy.array([i[0] for i in medDict1000[prot]])
+        meas1000 = numpy.array([i[1] for i in medDict1000[prot]])
+
+        d_10 = optimize.leastsq(turnoverResid10, [d0_10], args=(meas10,ts10))
+        d_1000 = optimize.leastsq(turnoverResid1000, [d0_1000], args=(meas1000,ts1000))
+        protTODict[prot] = {'10':d_10[0][0], '1000':d_1000[0][0]}
+        print protTODict[prot]
+    return protTODict
+
+def plotLabelKinsPage(Proteins, protTODict, medDict10, medDict1000, fig, name):
     time = numpy.linspace(0, 140, 200)
     k10 = qMS.growthRate(92)
     k1000 = qMS.growthRate(47)
@@ -45,13 +74,21 @@ def plotLabelKinsPage(Proteins, medDict10, medDict1000, fig, name):
     Large1Ax = []
     a = 0
     for prot in Proteins:
-
+        
+        d_10 = protTODict[prot]['10']
+        #p_10String = qMS.calcPercent(p_10, sigfig=2).split('.')[0]+'%'
+        d_1000 = protTODict[prot]['1000']
+        #p_1000String = qMS.calcPercent(p_1000, sigfig=2).split('.')[0]+'%
+        
         ax = fig.add_subplot(5,2,a+1)
         
         ax.scatter([i[0] for i in medDict10[prot]], [i[1] for i in medDict10[prot]], c = 'r')
         ax.scatter([i[0] for i in medDict1000[prot]], [i[1] for i in medDict1000[prot]], c = 'b')
         ax.plot(time, qMS.maxLabFunc(k10, time), c='r')
         ax.plot(time, qMS.maxLabFunc(k1000, time), c='b')
+        
+        ax.plot(time, qMS.overLabelingFunc(k10, time, d_10), c='r', ls='--')
+        ax.plot(time, qMS.overLabelingFunc(k1000, time, d_1000), c='b', ls='--')
         
         ax.set_xlim([0,140])
         ax.set_ylim([0,1.00])
@@ -75,7 +112,7 @@ def plotLabelKinsPage(Proteins, medDict10, medDict1000, fig, name):
     fig.text(0.25, 0.0025, "time (mins)", fontsize=12, horizontalalignment='center')
     fig.text(0.75, 0.0025, "time (mins)", fontsize=12, horizontalalignment='center')
     fig.tight_layout()
-    pylab.savefig(name)
+    #pylab.savefig(name)
     return Large1Ax
 
         
@@ -194,7 +231,7 @@ if __name__ == "__main__":
 
     AllSubunits = LargeSubunit + SmallSubunit
     
-    path = '/home/jhdavis/data/2013_05_28-MSUPulse2/filtered/'
+    path = '/home/jhdavis/data/2013_05_28-MSUPulse/filtered/'
 
     reds = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26', '#a50f15']
     blues = ['#eff3ff', '#c6dbef', '#93cae1', '#6baed6', '#3182bd', '#08519c']
@@ -317,9 +354,10 @@ if __name__ == "__main__":
         #medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
     
 ##################Fit data using pool size equation###########################
-    '''
-    poolSizeDict = fitPoolSizes(AllSubunits, medDict10, medDict1000)
-    '''
+    
+    #poolSizeDict = fitPoolSizes(AllSubunits, medDict10, medDict1000)
+    turnoverSizeDict = fitTurnover(SmallSubunit, medDict10, medDict1000)
+    
 ##################Plot the fits###########################
     '''
     ext = '.png'
@@ -339,20 +377,22 @@ if __name__ == "__main__":
     f5axs =plotPoolPage(SmallSubunit[10:], poolSizeDict, medDict10, medDict1000, fSmall2, '30S-2'+ext)
     '''
     ext = '.pdf'
+    '''
+    
     fLarge1 = pylab.figure(figsize=(7,10))
-    f1axs = plotLabelKinsPage(LargeSubunit[0:10], medDict10, medDict1000, fLarge1, '50S-1'+ext)
+    f1axs = plotLabelKinsPage(LargeSubunit[0:10], turnoverSizeDict, medDict10, medDict1000, fLarge1, '50S-1'+ext)
     
     fLarge2 = pylab.figure(figsize=(7,10))
-    f1axs = plotLabelKinsPage(LargeSubunit[10:20], medDict10, medDict1000, fLarge2, '50S-2'+ext)    
+    f1axs = plotLabelKinsPage(LargeSubunit[10:20], turnoverSizeDict, medDict10, medDict1000, fLarge2, '50S-2'+ext)    
     
     fLarge3 = pylab.figure(figsize=(7,10))
-    f3axs = plotLabelKinsPage(LargeSubunit[20:30], medDict10, medDict1000, fLarge3, '50S-3'+ext)
-    
+    f3axs = plotLabelKinsPage(LargeSubunit[20:30], turnoverSizeDict, medDict10, medDict1000, fLarge3, '50S-3'+ext)
+    '''
     fSmall1 = pylab.figure(figsize=(7,10))
-    f4axs = plotLabelKinsPage(SmallSubunit[0:10], medDict10, medDict1000, fSmall1, '30S-1'+ext)
+    f4axs = plotLabelKinsPage(SmallSubunit[0:10], turnoverSizeDict, medDict10, medDict1000, fSmall1, '30S-1'+ext)
 
     fSmall2 = pylab.figure(figsize=(7,10))
-    f5axs =plotLabelKinsPage(SmallSubunit[10:], medDict10, medDict1000, fSmall2, '30S-2'+ext)
+    f5axs =plotLabelKinsPage(SmallSubunit[10:], turnoverSizeDict, medDict10, medDict1000, fSmall2, '30S-2'+ext)
     
     
     
