@@ -290,21 +290,25 @@ def plotDataSets(files, names, num, den, subunits, title, yLabel, colors, saveNa
 ##################Initialize Varibles###########################    
 if __name__ == "__main__":
     vizLib.setRcs(scale=12)
+    
+    ##########GLOBAL VARIABLES##########
     SmallSubunit = ['BSubS02', 'BSubS03', 'BSubS04', 'BSubS05', 'BSubS06', 'BSubS07', 'BSubS08', 'BSubS09', 'BSubS10',
                     'BSubS11', 'BSubS12', 'BSubS13', 'BSubS14', 'BSubS15', 'BSubS16', 'BSubS17', 'BSubS18', 'BSubS20']
-
     LargeSubunit = ['BSubL01', 'BSubL02', 'BSubL03', 'BSubL04', 'BSubL05', 'BSubL06', 'BSubL10', 'BSubL11',
                     'BSubL12', 'BSubL13', 'BSubL14', 'BSubL15', 'BSubL16', 'BSubL17', 'BSubL18', 'BSubL19', 'BSubL20', 'BSubL21',
                     'BSubL22', 'BSubL23', 'BSubL24', 'BSubL27', 'BSubL28', 'BSubL29', 'BSubL30', 'BSubL31a', 'BSubL32',
-                    'BSubL33a', 'BSubL35', 'BSubL36']
-    
+                    'BSubL33a', 'BSubL35', 'BSubL36']    
     Inter45S =      ['BSubL01', 'BSubL02', 'BSubL03', 'BSubL04', 'BSubL05', 'BSubL06', 'BSubL10', 'BSubL11',
                     'BSubL12', 'BSubL13', 'BSubL14', 'BSubL15', 'BSubL16', 'BSubL17', 'BSubL18', 'BSubL19', 'BSubL20', 'BSubL21',
                     'BSubL22', 'BSubL23', 'BSubL24', 'BSubL29', 'BSubL30']
-
     AllSubunits = LargeSubunit + SmallSubunit
     
+    doublingTime_10 = 92
+    doublingTime_1000 = 47
+    
     path = '/home/jhdavis/data/2013_05_28-MSUPulse/filtered/'
+   
+   ##########Open Files##########
     files = qMS.sort_nicely([i.split('/')[-1] for i in glob.glob(path+'*.csv')])
 
     reds = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26', '#a50f15']
@@ -316,29 +320,11 @@ if __name__ == "__main__":
     namesInter_10 = [path+n for n in files[12:17]]
     namesInter_1000 = [path+n for n in files[18:]]
     
-    ##########GLOBAL VARIABLES##########
-    doublingTime_10 = 92
-    doublintTime_1000 = 47
-    ##########GLOBAL VARIABLES##########
-    
     times10 = [22, 49, 66, 88, 110, 132]
     times1000 = [11, 22, 33, 44, 55, 66]
     
-    ntDict70S_10 = {'names': names70S_10, 'times': times10}
-    ntDict70S_1000 = {'names': names70S_1000, 'times': times1000}
-    
-    ntDictInter_10 = {'names': namesInter_10, 'times': times10}
-    ntDictInter_1000 = {'names': namesInter_1000, 'times': times1000}
-
     labels10 = ['10 $\mu$M, 22 min', '10 $\mu$M, 49 min', '10 $\mu$M, 66 min', '10 $\mu$M, 88 min', '10 $\mu$M, 110 min', '10 $\mu$M, 132 min']
     labels1000 = ['1 mM, 11 min', '1 mM, 22 min', '1 mM, 33 min', '1 mM, 44 min', '1 mM, 55 min', '1 mM, 66 min']
-    
-    medDict70S_10 = {}
-    medDict70S_1000 = {}
-    
-    medDictInter_10 = {}
-    medDictInter_1000 = {}
-    
     
     #labels1000 = labels1000[0:3]
     #times1000 = times1000[0:3]
@@ -347,12 +333,11 @@ if __name__ == "__main__":
 ##################Extract the data###########################
     num = ['AMP_L']
     den = ['AMP_U', 'AMP_L']
-    dataByProtein70S = qMS.multiStatsDict(namesInter_10+namesInter_1000, num, den)
+    dataByProtein70S = qMS.multiStatsDict(names70S_10+names70S_1000, num, den)
     dataByProteinInter = qMS.multiStatsDict(namesInter_10+namesInter_1000, num, den)
-    
 ##################Plot the datasets###########################
     pylab.close('all')    
-    
+    '''
     yMax=1.5
     figSize=(22,7)
     median=False    
@@ -384,17 +369,23 @@ if __name__ == "__main__":
 
     filtPlots_Inter_1000 = plotDataSets(namesInter_1000, labels1000, num, den, AllSubunits, 'permissive conditions : 50S\nprotein levels', '[Labeled+Unlabeled/[All]', blues,
                  yMax=yMax, figSize=figSize, median=median, legendLoc='upper left', legendCols=3, normProtein='BSubL24')
-
+    '''
 ##################Find the medians###########################
-    '''
+    medDict70S_10 = {}
+    medDict70S_1000 = {}
+    
+    medDictInter_10 = {}
+    medDictInter_1000 = {}
+    
+    ntDict70S_10 = {'names': names70S_10, 'times': times10}
+    ntDict70S_1000 = {'names': names70S_1000, 'times': times1000}
+    
+    ntDictInter_10 = {'names': namesInter_10, 'times': times10}
+    ntDictInter_1000 = {'names': namesInter_1000, 'times': times1000}
+
     for prot in AllSubunits:
-        medDict10[prot] = [[ntDict10['times'][i],numpy.median(dataByProtein[ntDict10['names'][int(i)]][prot])] for i in [0,1,2,3,4] if len(dataByProtein[ntDict10['names'][int(i)]][prot]) > 0]
-        #medDict10[prot] = [[ntDict10['times'][i],numpy.median(dataByProtein[ntDict10['names'][int(i)]][prot])] for i in range(6,12) if len(dataByProtein[ntDict10['names'][int(i)]][prot]) > 0]
-        #medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in range(6,12) if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
-        #medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2,3,4,5] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
-        medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
-        #medDict1000[prot] = [[ntDict1000['times'][i],numpy.median(dataByProtein[ntDict1000['names'][int(i)]][prot])] for i in [0,1,2] if len(dataByProtein[ntDict1000['names'][int(i)]][prot]) > 0]
-    '''
+        medDict70S_10[prot] = [[ntDict70S_10['times'][i],numpy.median(dataByProtein70S[ntDict70S_10['names'][int(i)]][prot])] for i in [0,1,2,3,4,5] if len(dataByProtein70S[ntDict70S_10['names'][int(i)]][prot]) > 0]
+    
 ##################Fit data using pool size equation###########################
     '''
     poolSizeDict = fitPoolOverSizes(Inter45S, medDict10, medDict1000)
