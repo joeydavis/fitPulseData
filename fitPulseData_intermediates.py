@@ -80,9 +80,26 @@ def calcFractionIntermediate(time, proteins, datInter, datTerminal, k):
         X[p]['fracX'] = fracInter(fitInter[p], P[p], time, k)
     return X
 
+def poolIntermedFracXResid(P, y, t):
+    k = qMS.growthRate(doublingTime_10)
+    fracX = 0.64
+    return y - qMS.poolInterFracXFunc(k, t, P, fracX)
+
+def fitPoolFixFracX(Proteins, medDict10):
+    p0_10 = 0.01
+    
+    protPoolDict = {}
+    for prot in Proteins:
+        ts10 = numpy.array([e[0] for e in medDict10[prot]])
+        meas10 = numpy.array([e[1] for e in medDict10[prot]])
+        
+        p_10 = optimize.leastsq(poolIntermedFracXResid, [p0_10], args=(meas10,ts10))
+        protPoolDict[prot] = {'10':p_10[0][0], '1000':'blah'}
+    return protPoolDict
+
 #############PLOTTING THE INDIVIDUAL FITS####################
 def plotPoolPage(Proteins, protPoolDict, medDict10, medDict1000, saveFile=None, 
-                 figSize=(7,10), yMax=1.0, intermediate=False, title=None, double=True, showPools=True):
+                 figSize=(7,10), yMax=1.0, funcToFit=qMS.maxLabFunc, title=None, double=True, showPools=True):
     time = numpy.linspace(0, doublingTime_10*2, num=200)
     k10 = qMS.growthRate(doublingTime_10)
     k1000 = qMS.growthRate(doublingTime_1000)
@@ -93,16 +110,17 @@ def plotPoolPage(Proteins, protPoolDict, medDict10, medDict1000, saveFile=None,
     for prot in Proteins:
         p_10 = protPoolDict[prot]['10']
         p_10String = qMS.calcPercent(p_10, sigfig=2).split('.')[0]+'%'
-        p_1000 = protPoolDict[prot]['1000']
-        p_1000String = qMS.calcPercent(p_1000, sigfig=2).split('.')[0]+'%'
+        if double:
+            p_1000 = protPoolDict[prot]['1000']
+            p_1000String = qMS.calcPercent(p_1000, sigfig=2).split('.')[0]+'%'
 
         ax = fig.add_subplot(5,2,a+1)
         if showPools:
-            textstr1 = '1 mM : P=' + p_1000String
             textstr2 = '\n\n'+'10 $\mu$M : P=' + p_10String
             props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
             ax.text(0.025, .95, textstr2, transform=ax.transAxes, fontsize=8, verticalalignment='top', horizontalalignment='left', bbox=props, color='r')
             if double:
+                textstr1 = '1 mM : P=' + p_1000String
                 ax.text(0.025, .925, textstr1, transform=ax.transAxes, fontsize=8, verticalalignment='top', horizontalalignment='left', color='b')
         
         ax.scatter([i[0] for i in medDict10[prot]], [i[1] for i in medDict10[prot]], c = 'r')
@@ -111,14 +129,9 @@ def plotPoolPage(Proteins, protPoolDict, medDict10, medDict1000, saveFile=None,
             ax.scatter([i[0] for i in medDict1000[prot]], [i[1] for i in medDict1000[prot]], c = 'b')
             ax.plot(time, qMS.maxLabFunc(k1000, time), c='b')
 
-        if intermediate:
-            ax.plot(time, qMS.poolInterFunc(k10, time, p_10), c='r', ls='--')
-            if double:
-                ax.plot(time, qMS.poolInterFunc(k1000, time, p_1000), c='b', ls='--')
-        else:
-            ax.plot(time, qMS.poolFunc(k10, time, p_10), c='r', ls='--')
-            if double:
-                ax.plot(time, qMS.poolFunc(k1000, time, p_1000), c='b', ls='--')
+        ax.plot(time, funcToFit(k10, time, p_10), c='r', ls='--')
+        if double:
+            ax.plot(time, funcToFit(k1000, time, p_1000), c='b', ls='--')
             
         ax.set_xlim([0,doublingTime_10*2])
         ax.set_ylim([0,yMax])
@@ -240,6 +253,7 @@ def plotCompData(xdat, ydat, Proteins, title=None, xlabel='dat1', ylabel='dat2',
     for prot, xl, yl in zip(Proteins, x, y):
         scatAx.annotate(str(prot[4:]), xy = (float(xl), float(yl)), xytext = (15,15), textcoords = 'offset points', arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
     pylab.tight_layout()
+    scatAx.plot(numpy.linspace(0, 10), numpy.linspace(0,10))
     return scatAx
     
 ##################Initialize Varibles###########################    
@@ -261,7 +275,7 @@ if __name__ == "__main__":
     doublingTime_10 = 92
     doublingTime_1000 = 47
     
-    path = '/home/jhdavis/data/2013_05_28-MSUPulse/filtered/'
+    path = '/home/jhdavis/data/2013_05_28-MSUPulse2/filtered/'
     
     figWidth = 11
     
@@ -356,24 +370,32 @@ if __name__ == "__main__":
 ##################Fit data using pool size equation###########################
     poolSize70SDict = fitPoolSizes(AllSubunits, medDict70S_10, medDict70S_1000)
     poolSizeInterDict = fitPoolIntermediateSizes(Inter45S, medDictInter_10, medDictInter_1000)
+    poolSizeInterFixFracXDict = fitPoolFixFracX(Inter45S, medDictInter_10)
     
     poolSize70S_10 = {key : poolSize70SDict[key]['10'] for key in poolSize70SDict.keys()}
     poolSizeInter_10 = {key : poolSizeInterDict[key]['10'] for key in poolSizeInterDict.keys()}    
+    poolSizeInterFixFracX_10 = {key : poolSizeInterFixFracXDict[key]['10'] for key in poolSizeInterFixFracXDict.keys()}    
     
     fracX = calcFractionIntermediate(i, poolSizeInter_10.keys(), poolSizeInter_10, poolSize70S_10, qMS.growthRate(doublingTime_10))
-    #plotPoolBar(fracX, ['fracX'], ['r'], 'calculated fraction intermediate', figname=None, barNames=poolSizeInter_10.keys(), sortingKey=1)
+    plotPoolBar(fracX, ['fracX'], ['r'], 'calculated fraction intermediate', figname=None, barNames=poolSizeInter_10.keys(), sortingKey=1)
+
+    #print poolSizeInterFixFracXDict
 ##################Plot the fits###########################
     figSize=(7,10)
-    saveFile='/home/jhdavis/Dropbox/page.png'
+    #saveFile='/home/jhdavis/Dropbox/page.png'
+    saveFile=None
     '''
     for i in [1,2,3]:
-        plotPoolPage(LargeSubunit[(i-1)*10:i*10], poolSize70SDict, medDict70S_10, medDict70S_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, title='70S labeling')
+        plotPoolPage(LargeSubunit[(i-1)*10:i*10], poolSize70SDict, medDict70S_10, medDict70S_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolFunc, title='70S labeling', double=False, showPools=True)
     
     for i in [1,2]:
         plotPoolPage(SmallSubunit[(i-1)*10:i*10], poolSize70SDict, medDict70S_10, medDict70S_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, title='70S labeling')
-  
+    
     for i in [1,2,3]:
-        plotPoolPage(Inter45S[(i-1)*10:i*10], poolSizeInterDict, medDictInter_10, medDictInter_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, intermediate=True, title='Intermediate labeling', double=False, showPools=True)
+        plotPoolPage(Inter45S[(i-1)*10:i*10], poolSizeInterDict, medDictInter_10, medDictInter_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolInterFunc, title='Intermediate labeling', double=False, showPools=True)
+    
+    for i in [1,2,3]:
+        plotPoolPage(Inter45S[(i-1)*10:i*10], poolSizeInterFixFracXDict, medDictInter_10, medDictInter_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolInterFracXFunc, title='Intermediate labeling fixed FracX', double=False, showPools=True)
     '''
 ##################Make bar graphs###########################
     '''
@@ -383,6 +405,7 @@ if __name__ == "__main__":
     plotPoolBar(poolSizeInterDict, ['10', '1000'], ['r', 'b'], '1 mM', figname=None, barNames=Inter45S, sortingKey=1)
     '''
 ##################Read protein inventory data###########################
+    '''
     path = '/home/jhdavis/data/originalMSUProteinLevels/McMasterMSUCsvs/'
     McMaster45S = [path+i for i in ["McMaster45S_esi-run1_filt.csv", "McMaster45S_esi-run2.1_filt.csv", "McMaster45S_esi-run2_filt.csv", "McMaster45S_qtof_filt_filtppm.csv"]]
     McMaster50S = [path+i for i in ["McMaster50S_esi-run1_filt.csv", "McMaster50S_esi-run2.1_filt.csv", "McMaster50S_esi-run2_filt.csv", "McMaster50S_qtof_filt_filtppm.csv"]]
@@ -397,7 +420,7 @@ if __name__ == "__main__":
     verifiedZero = ['BSubL16', 'BSubL28', 'BSubL36', 'BSubL31a']    
     for i in verifiedZero:
         merged45[i] = numpy.array([0.0])
-    
+    '''
     
 ##################Plot protein inventory data###########################
     '''
@@ -432,6 +455,9 @@ if __name__ == "__main__":
     poolSizeInter_10 = {key : poolSizeInterDict[key]['10'] for key in poolSizeInterDict.keys()}
     scatAx = plotCompData(poolSize70S_10, poolSizeInter_10, Inter45S, title='45S Pool measurements', xlabel='precursor pool size (P) from 70S measurement',
                  ylabel='precursor pool size (P) from 45S measurement', xMax=1.25, yMax=6.0, saveFile=None)
+    scatAx = plotCompData(poolSize70S_10, poolSizeInterFixFracX_10, Inter45S, title='45S Pool measurements', xlabel='precursor pool size (P) from 70S measurement',
+                 ylabel='precursor pool size (P) from 45S measurement_corrected', xMax=1.25, yMax=1.25, saveFile=None)
+    
 ##################Calculate fraction intermediate###########################
 
     pylab.show('all')
