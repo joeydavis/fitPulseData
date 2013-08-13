@@ -82,7 +82,7 @@ def calcFractionIntermediate(time, proteins, datInter, datTerminal, k):
 
 def poolIntermedFracXResid(P, y, t):
     k = qMS.growthRate(doublingTime_10)
-    fracX = 0.64
+    fracX = 0.65
     return y - qMS.poolInterFracXFunc(k, t, P, fracX)
 
 def fitPoolFixFracX(Proteins, medDict10):
@@ -275,7 +275,7 @@ if __name__ == "__main__":
     doublingTime_10 = 92
     doublingTime_1000 = 47
     
-    path = '/home/jhdavis/data/2013_05_28-MSUPulse2/filtered/'
+    path = '/home/jhdavis/data/2013_05_28-MSUPulse/filtered/'
     
     figWidth = 11
     
@@ -386,17 +386,17 @@ if __name__ == "__main__":
     saveFile=None
     '''
     for i in [1,2,3]:
-        plotPoolPage(LargeSubunit[(i-1)*10:i*10], poolSize70SDict, medDict70S_10, medDict70S_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolFunc, title='70S labeling', double=False, showPools=True)
+        plotPoolPage(LargeSubunit[(i-1)*10:i*10], poolSize70SDict, medDict70S_10, medDict70S_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolInterFracXFunc, title='45S labeling fitFracX', double=False, showPools=False)
     
     for i in [1,2]:
         plotPoolPage(SmallSubunit[(i-1)*10:i*10], poolSize70SDict, medDict70S_10, medDict70S_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, title='70S labeling')
     
     for i in [1,2,3]:
-        plotPoolPage(Inter45S[(i-1)*10:i*10], poolSizeInterDict, medDictInter_10, medDictInter_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolInterFunc, title='Intermediate labeling', double=False, showPools=True)
-    
+        plotPoolPage(Inter45S[(i-1)*10:i*10], poolSize70SDict, medDictInter_10, medDictInter_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolInterFracXFunc, title='Intermediate labeling fit FracX', double=False, showPools=False)
+    '''
     for i in [1,2,3]:
         plotPoolPage(Inter45S[(i-1)*10:i*10], poolSizeInterFixFracXDict, medDictInter_10, medDictInter_1000, saveFile=saveFile, figSize=figSize, yMax=1.0, funcToFit=qMS.poolInterFracXFunc, title='Intermediate labeling fixed FracX', double=False, showPools=True)
-    '''
+    
 ##################Make bar graphs###########################
     '''
     plotPoolBar(poolSize70SDict, ['10'], ['r'], '10 $\mu$M', figname=None, barNames=AllSubunits, sortingKey=1)
