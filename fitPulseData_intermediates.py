@@ -275,7 +275,7 @@ if __name__ == "__main__":
     doublingTime_10 = 92
     doublingTime_1000 = 47
     
-    path = '/home/jhdavis/data/2013_05_28-MSUPulse/filtered/'
+    path = '/home/jhdavis/McMasterMSUDataSets/PulseLabeling/2013_05_28-MSUPulse/filtered/'
     
     figWidth = 11
     
