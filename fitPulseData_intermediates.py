@@ -108,7 +108,7 @@ def plotPoolPage(Proteins, protPoolDict, medDict10, medDict1000, saveFile=None,
     Large1Ax = []
     a = 0
     for prot in Proteins:
-        p_10 = protPoolDict[prot]['10']
+        p_10 = protPoolDict[prot]['10'] 
         p_10String = qMS.calcPercent(p_10, sigfig=2).split('.')[0]+'%'
         if double:
             p_1000 = protPoolDict[prot]['1000']
